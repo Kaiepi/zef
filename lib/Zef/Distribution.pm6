@@ -122,7 +122,8 @@ class Zef::Distribution is Distribution::DEPRECATED is Zef::Distribution::Depend
     }
 
     # use Distribution's .ver but filter off a leading 'v'
-    method ver { my $v = callsame; $v.subst(/^v/, '') }
+    has $!ver-cache;
+    method ver { $!ver-cache //= Version.new((my $ = callsame).subst(/^v/, '') // 0) }
 
     method WHICH(Zef::Distribution:D:) { "{self.^name}|{self.Str()}" }
 

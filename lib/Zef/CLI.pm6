@@ -234,7 +234,7 @@ package Zef::CLI {
         abort "Can't upgrade identities that aren't installed: {@missing.join(', ')}" if +@missing;
 
         my @installed = $client.list-installed(|$install-to.map(*.&str2cur))
-            .sort({Version.new($^b.dist.ver) > Version.new($^a.dist.ver)})
+            .sort({$^b.dist.ver > $^a.dist.ver})
             .unique(:as({"{.dist.name}:ver<{.dist.auth-matcher}>"}));
         my @requested = +@identities
             ?? |$client.find-candidates(|@identities.map(*.&str2identity))
@@ -243,7 +243,7 @@ package Zef::CLI {
             my $latest-installed = @installed.grep({ .dist.name eq $candi.dist.name })\
                 .sort({ .dist.auth-matcher ne $candi.dist.auth-matcher }).head; # this is to handle auths that changed. need to find a better way...
             next() R, note "Unsure how to update '{$candi.dist.identity}'" unless $latest-installed;
-            ((Version.new($latest-installed.dist.ver) cmp Version.new($candi.dist.ver)) === Order::Less) ?? <upgradable> !! <current>;
+            (($latest-installed.dist.ver cmp $candi.dist.ver) === Order::Less) ?? <upgradable> !! <current>;
         }
         abort "All requested distributions are already at their latest versions" unless +@upgradable;
         say "The following distributions will be upgraded: {@upgradable.map(*.dist.identity).join(', ')}";

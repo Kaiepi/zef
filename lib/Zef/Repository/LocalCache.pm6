@@ -55,15 +55,19 @@ class Zef::Repository::LocalCache does Repository {
         my %specs  = @identities.map: { $_ => Zef::Distribution::DependencySpecification.new($_) }
 
         # identities that are cached in the localcache manifest
-        gather for |self!gather-dists -> $dist {
-            for @identities.grep({ $dist.contains-spec(%specs{$_}, :$strict) }) -> $wanted-as {
-                take Candidate.new(
+        self!gather-dists.map: -> $dist {
+            my $wanted-identities := @identities.grep({ $dist.contains-spec(%specs{$_}, :$strict) });
+
+            my $candidates := $wanted-identities.map: -> $wanted-as {
+                Candidate.new(
                     dist => $dist,
                     uri  => $dist.IO.absolute,
                     as   => $wanted-as,
                     from => self.id,
-                );
+                )
             }
+
+            $candidates.Slip;
         }
     }
 

@@ -61,15 +61,19 @@ class Zef::Repository::Ecosystems does Repository {
         my @wanted = @identities;
         my %specs  = @wanted.map: { $_ => Zef::Distribution::DependencySpecification.new($_) }
 
-        gather for |self!gather-dists -> $dist {
-            for @identities.grep({ $dist.contains-spec(%specs{$_}, :$strict) }) -> $wanted-as {
-                take Candidate.new(
+        self!gather-dists.map: -> $dist {
+            my $wanted-identities := @identities.grep({ $dist.contains-spec(%specs{$_}, :$strict) });
+
+            my $candidates := $wanted-identities.map: -> $wanted-as {
+                Candidate.new(
                     dist => $dist,
                     uri  => ($dist.source-url || $dist.hash<support><source>),
                     as   => $wanted-as,
                     from => self.id,
-                );
+                )
             }
+
+            $candidates.Slip;
         }
     }
 
